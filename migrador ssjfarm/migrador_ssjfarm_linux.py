@@ -83,14 +83,35 @@ def setup_logging(log_dir):
     return logger, log_path
 
 
+BACKUP_ROOT = os.path.join(os.path.expanduser("~"), ".migrador_ssjfarm", "backups")
+
+
 def backup_file(path):
-    """Copia o arquivo original para um backup OCULTO (nome iniciado com
-    '.') antes de qualquer alteração."""
+    """Copia o arquivo original para uma pasta de backup separada
+    (~/.migrador_ssjfarm/backups), fora da Área de Trabalho.
+
+    Alguns ambientes gráficos (Nautilus/Files, Cinnamon, XFCE em algumas
+    versões) renderizam qualquer arquivo *.desktop presente na pasta da
+    área de trabalho como ícone, mesmo que o nome comece com '.' - ou seja,
+    prefixar com ponto não é suficiente para "esconder" o backup do usuário.
+    Guardar o backup em outra pasta resolve isso de vez, além de manter a
+    Área de Trabalho limpa.
+
+    A estrutura de diretórios original é espelhada dentro da pasta de
+    backup (ex.: um arquivo em ~/Desktop/app.desktop vira
+    ~/.migrador_ssjfarm/backups/home/usuario/Desktop/app.desktop.bak-<data>)
+    para evitar colisão de nomes entre pastas diferentes (Desktop,
+    .local/share/applications, etc.)."""
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    dirname, basename = os.path.split(path)
-    backup_name = ".{}.bak-{}".format(basename, ts)
-    backup_path = os.path.join(dirname, backup_name)
+    abs_path = os.path.abspath(path)
+    orig_dir = os.path.dirname(abs_path).lstrip(os.sep)
+    basename = os.path.basename(abs_path)
+
+    target_dir = os.path.join(BACKUP_ROOT, orig_dir)
+    backup_path = os.path.join(target_dir, "{}.bak-{}".format(basename, ts))
+
     try:
+        os.makedirs(target_dir, exist_ok=True)
         shutil.copy2(path, backup_path)
         return backup_path
     except Exception:

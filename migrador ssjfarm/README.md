@@ -9,11 +9,11 @@ abrir com o Firefox. Feita para rodar em uma frota mista de **Windows**,
 
 ## 1. Arquivos do projeto
 
-| Arquivo                            | Para quê serve                                           |      Precisa de Python no destino?      |
-| ---------------------------------- | -------------------------------------------------------- | :-------------------------------------: |
-| `migrador_ssjfarm_windows.ps1`     | Migração em máquinas **Windows**                         |    ❌ Não (usa só PowerShell nativo)    |
-| `migrador_ssjfarm_linux.py`        | Código-fonte da migração em **Linux** (Ubuntu/CentOS 6)  | ✅ Sim, ou compile em binário (seção 4) |
-| `migrador_ssjfarm_linux` (binário) | Versão compilada do script Linux, gerada com PyInstaller |                 ❌ Não                  |
+| Arquivo                          | Para quê serve                                    | Precisa de Python no destino? |
+|-----------------------------------|----------------------------------------------------|:---:|
+| `migrador_ssjfarm_windows.ps1`    | Migração em máquinas **Windows**                   | ❌ Não (usa só PowerShell nativo) |
+| `migrador_ssjfarm_linux.py`       | Código-fonte da migração em **Linux** (Ubuntu/CentOS 6) | ✅ Sim, ou compile em binário (seção 4) |
+| `migrador_ssjfarm_linux` (binário)| Versão compilada do script Linux, gerada com PyInstaller | ❌ Não |
 
 Use o `.ps1` no Windows e o **binário compilado** no Linux sempre que
 possível — assim nenhuma das 15 máquinas precisa ter Python instalado.
@@ -78,13 +78,13 @@ possível — assim nenhuma das 15 máquinas precisa ter Python instalado.
 
 ### 3.3 Parâmetros disponíveis
 
-| Parâmetro | Obrigatório | Padrão                           | Descrição                 |
-| --------- | :---------: | -------------------------------- | ------------------------- |
-| `-Modo`   |     ✅      | —                                | `VIRTUAL` ou `FISICO`     |
-| `-Ip`     |     ❌      | `192.168.100.123`                | IP do servidor virtual    |
-| `-Porta`  |     ❌      | `8181`                           | Porta do servidor virtual |
-| `-DryRun` |     ❌      | desligado                        | Simula sem gravar nada    |
-| `-LogDir` |     ❌      | `%ProgramData%\MigradorSSJ\logs` | Pasta onde salvar o log   |
+| Parâmetro   | Obrigatório | Padrão                    | Descrição |
+|-------------|:---:|----------------------------|-----------|
+| `-Modo`     | ✅ | —                          | `VIRTUAL` ou `FISICO` |
+| `-Ip`       | ❌ | `192.168.100.123`          | IP do servidor virtual |
+| `-Porta`    | ❌ | `8181`                     | Porta do servidor virtual |
+| `-DryRun`   | ❌ | desligado                  | Simula sem gravar nada |
+| `-LogDir`   | ❌ | `%ProgramData%\MigradorSSJ\logs` | Pasta onde salvar o log |
 
 Exemplo com IP/porta customizados:
 
@@ -114,7 +114,6 @@ powershell -ExecutionPolicy Bypass -File .\migrador_ssjfarm_windows.ps1 -Modo FI
 ### 4.1 Opção A — rodar o script Python diretamente (se já tiver Python 3)
 
 **Pré-requisitos:**
-
 - Python 3.6+ instalado (`python3 --version` para conferir).
 - **Ubuntu**: geralmente já vem com Python 3.
 - **CentOS 6**: **não** vem com Python 3 por padrão (só Python 2.6, que não
@@ -208,14 +207,14 @@ principalmente as CentOS 6.
 
 ### 4.4 Parâmetros disponíveis (idênticos no `.py` e no binário)
 
-| Parâmetro          | Obrigatório | Padrão                     | Descrição                                                     |
-| ------------------ | :---------: | -------------------------- | ------------------------------------------------------------- |
-| `--modo`           |     ✅      | —                          | `VIRTUAL` ou `FISICO`                                         |
-| `--ip`             |     ❌      | `192.168.100.123`          | IP do servidor virtual                                        |
-| `--porta`          |     ❌      | `8181`                     | Porta do servidor virtual                                     |
-| `--dry-run`        |     ❌      | desligado                  | Simula sem gravar nada                                        |
-| `--include-system` |     ❌      | desligado                  | Também escaneia `/usr/share/applications` (precisa de `sudo`) |
-| `--log-dir`        |     ❌      | `~/.migrador_ssjfarm/logs` | Pasta onde salvar o log                                       |
+| Parâmetro          | Obrigatório | Padrão                        | Descrição |
+|---------------------|:---:|--------------------------------|-----------|
+| `--modo`             | ✅ | —                              | `VIRTUAL` ou `FISICO` |
+| `--ip`               | ❌ | `192.168.100.123`              | IP do servidor virtual |
+| `--porta`            | ❌ | `8181`                         | Porta do servidor virtual |
+| `--dry-run`          | ❌ | desligado                      | Simula sem gravar nada |
+| `--include-system`   | ❌ | desligado                      | Também escaneia `/usr/share/applications` (precisa de `sudo`) |
+| `--log-dir`          | ❌ | `~/.migrador_ssjfarm/logs`     | Pasta onde salvar o log |
 
 Exemplo completo:
 
@@ -231,21 +230,36 @@ sudo /tmp/migrador_ssjfarm_linux --modo FISICO --ip 10.0.5.20 --porta 9090 --inc
 ### 4.5 Onde ficam os logs e backups
 
 - **Log**: `~/.migrador_ssjfarm/logs/migrador_<hostname>_<data>.log`
-- **Backup de cada `.desktop` alterado**: mesma pasta do arquivo original,
-  com nome iniciado por `.` (oculto por padrão no `ls`, Nautilus, Dolphin
-  etc.), no formato `.nome-original.desktop.bak-<data>`.
+- **Backup de cada `.desktop` alterado**: fica em uma pasta **separada da
+  Área de Trabalho**, em `~/.migrador_ssjfarm/backups/`, espelhando o
+  caminho original. Por exemplo, um atalho em `~/Desktop/app.desktop`
+  gera um backup em:
 
-Para ver os backups:
+  ```
+  ~/.migrador_ssjfarm/backups/home/<usuario>/Desktop/app.desktop.bak-<data>
+  ```
+
+  > Essa mudança existe porque, em alguns ambientes gráficos (Nautilus/Files,
+  > Cinnamon, XFCE em certas versões), qualquer arquivo `*.desktop` colocado
+  > na pasta da Área de Trabalho aparece como ícone — **mesmo com o nome
+  > começando com ponto**. Guardando o backup em outra pasta, ele nunca
+  > aparece na Área de Trabalho, independentemente do ambiente gráfico.
+
+Para listar todos os backups feitos em uma máquina:
 
 ```bash
-ls -la ~/Desktop        # ou ~/"Área de Trabalho"
+find ~/.migrador_ssjfarm/backups -type f
 ```
 
 ### 4.6 Como desfazer (rollback) uma máquina
 
 ```bash
-# Exemplo: restaurar um atalho específico
-cp ~/Desktop/.MinhaFarmacia.desktop.bak-20260827_143012 ~/Desktop/MinhaFarmacia.desktop
+# 1. Encontre o backup do atalho que quer restaurar
+find ~/.migrador_ssjfarm/backups -name "MinhaFarmacia.desktop*"
+
+# 2. Copie de volta para a Área de Trabalho, removendo o sufixo .bak-<data>
+cp ~/.migrador_ssjfarm/backups/home/usuario/Desktop/MinhaFarmacia.desktop.bak-20260827_143012 \
+   ~/Desktop/MinhaFarmacia.desktop
 ```
 
 ---
@@ -322,11 +336,11 @@ ansible-playbook -i inventory.ini migrar.yml -e "dry_run_flag="
 
 ## 7. Códigos de saída (para automação/orquestração)
 
-| Código | Significado                                           |
-| :----: | ----------------------------------------------------- |
-|  `0`   | Concluído sem erros                                   |
-|  `1`   | Concluído, mas com erro em um ou mais itens (ver log) |
-|  `2`   | Erro fatal — o script não concluiu a execução         |
+| Código | Significado |
+|:---:|---|
+| `0` | Concluído sem erros |
+| `1` | Concluído, mas com erro em um ou mais itens (ver log) |
+| `2` | Erro fatal — o script não concluiu a execução |
 
 Válido tanto para o `.ps1` (Windows) quanto para o `.py`/binário (Linux).
 Útil para o PsExec/Ansible/SSH sinalizarem automaticamente qual máquina
